@@ -14,18 +14,18 @@ for the port on server and client.
 How can it be run?
 
 Server:
-	ShareData shareData = ShareData.setShareData("[INPUT ANY OBJECT 
-HERE]", ShareDataType.OTHER);
+	```java
 	Server server = new Server();
-	server.sendData(shareData, ShareData.DEFAULT_PORT);
-
+	ShareData data = ShareData.setShareData("text or other object to be shared", ShareDataType.OTHER);
+	server.sendData(data, ShareData.DEFAULT_PORT);
+	```
 Client:
+	```java
 	Client client = new Client();
-	ShareData shareData = client.listen("localhost", 
-ShareData.DEFAULT_PORT);
-	Object result = shareData.getShareData();
+	ShareData data = client.listen("localhost", ShareData.DEFAULT_PORT);
+	```
 
 Make sure that localhost is replaced with whichever IP address you want to 
-use. As you may have noticed, the Client class has aleady several functions 
+use, and replace ShareData.DEFAULT_PORT with your own value. As you may have noticed, the Client class has aleady several functions 
 for listening on all ip addresses connected to the wireless network. Edit 
 that to your heart's desire:)
