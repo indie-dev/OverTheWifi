@@ -35,4 +35,4 @@ Client:
 Make sure that localhost is replaced with whichever IP address you want to 
 use, and replace ShareData.DEFAULT_PORT with your own value. As you may have noticed, the Client class has aleady several functions 
 for listening on all ip addresses connected to the wireless network. Edit 
-that to your heart's desire:)
+that to your heart's desire :)
