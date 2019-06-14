@@ -14,14 +14,21 @@ for the port on server and client.
 How can it be run?
 
 Server:
-	```java
+
+	```
 	Server server = new Server();
+	
 	ShareData data = ShareData.setShareData("text or other object to be shared", ShareDataType.OTHER);
+	
 	server.sendData(data, ShareData.DEFAULT_PORT);
 	```
+
+
 Client:
-	```java
+
+	```
 	Client client = new Client();
+	
 	ShareData data = client.listen("localhost", ShareData.DEFAULT_PORT);
 	```
 
