@@ -1,18 +1,22 @@
 package otw.share.client;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
 import otw.share.ShareData;
+import otw.share.ShareData.ShareDataType;
 
 public class Client 
 {
-	
+	//NOTICE: All methods that automate listening methods are EXPERIMENTAL.
+	//This is because the socket server keeps closing on every connection.
 	public Client()
 	{
 		//Automatically create an on connect listener
@@ -86,6 +90,21 @@ public class Client
 		return null;
 	}
 	
+	public void listenForAllDataTypes(String host, int port)
+	{
+		this.listenAndCopy(host, port);
+		this.listenOnAllAndCopy(port);
+	}
+	
+	public void listenForAllDataTypes(int port)
+	{
+		//Experimental, for SDK-based automation
+		//Experimental because the socket server keeps on closing early
+		//Until that is patched, this will stay experimental
+		this.listenAndCopy("localhost", port);
+		this.listenOnAllAndCopy(port);
+	}
+	
 	public List<String> listAllConnectedHosts(String subnet, int maxIP, int timeout)
 	{
 		//Loop through maxIP
@@ -125,7 +144,7 @@ public class Client
 	}
 	
 	
-	public List<ShareData> listenOnAllConnectedDevices(String subnet, int maxIP, int timeout)
+	public List<ShareData> listenOnAllConnectedDevices(String subnet, int maxIP, int timeout, int port)
 	{
 		//Loop through maxIP
 		for( int i = 1; i < maxIP; i++)
@@ -136,7 +155,6 @@ public class Client
 				//Check if the ip address is reachable
 				if(InetAddress.getByName(host).isReachable(timeout))
 				{
-					int port = ShareData.DEFAULT_PORT;
 					ShareData data = listen(host, port);
 					shareDataArray.add(data);
 				}
@@ -149,19 +167,53 @@ public class Client
 		return this.shareDataArray;
 	}
 	
-	public List<ShareData> listenOnAllConnectedDevices(int maxIP, int timeout)
+	public List<ShareData> listenOnAllConnectedDevices(int maxIP, int timeout, int port)
 	{
-		return this.listenOnAllConnectedDevices("192.168.0", maxIP, timeout);
+		return this.listenOnAllConnectedDevices("192.168.0", maxIP, timeout, port);
 	}
 	
-	public List<ShareData> listenOnAllConnectedDevices(int maxIP)
+	public List<ShareData> listenOnAllConnectedDevices(int maxIP, int port)
 	{
-		return this.listenOnAllConnectedDevices(maxIP, 100);
+		return this.listenOnAllConnectedDevices(maxIP, 100, port);
 	}
 	
-	public List<ShareData> listenOnAllConnectedDevices()
+	public List<ShareData> listenOnAllConnectedDevices(int port)
 	{
-		return this.listenOnAllConnectedDevices(100);
+		return this.listenOnAllConnectedDevices(100, port);
 	}
 	
+	public void copySharedText(ShareData data)
+	{
+		if(data.getShareDataType().equals(ShareDataType.CLIPBOARD_DATA))
+		{
+			//Copy the shared text
+			//Might not work on mobile
+			StringSelection selection = new StringSelection(data.getShareData().toString());
+			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+			clipboard.setContents(selection, null);
+		}
+	}
+	
+	public void listenAndCopy(String host, int port)
+	{
+		ShareData shareData = listen(host, port);
+		this.copySharedText(shareData);
+	}
+	
+	public void listenOnAllAndCopy(int port)
+	{
+		List<ShareData> shareDataList = this.listenOnAllConnectedDevices(port);
+		String textToCopy = new String();
+		for(ShareData data : shareDataList)
+		{
+			if(data.getShareDataType().equals(ShareDataType.CLIPBOARD_DATA))
+			{
+				textToCopy += data.getShareData().toString();
+			}
+		}
+		
+		StringSelection selection = new StringSelection(textToCopy);
+		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		clipboard.setContents(selection, null);
+	}
 }

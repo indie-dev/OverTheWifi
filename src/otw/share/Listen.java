@@ -9,6 +9,6 @@ public class Listen
 	public static void main(String[] args)
 	{
 		Client client = new Client();
-		client.listen("localhost", ShareData.DEFAULT_PORT);
+		client.listenForAllDataTypes("localhost", ShareData.DEFAULT_PORT);
 	}
 }

@@ -15,7 +15,7 @@ public class Host {
 	public static void main(String[] args) throws UnknownHostException, IOException 
 	{
 		Server server = new Server();
-		ShareData shareData = ShareData.setShareData("Da earf is mf flat", ShareDataType.OTHER);
+		ShareData shareData = ShareData.setShareData("Test text", ShareDataType.CLIPBOARD_DATA);
 		server.sendData(shareData, ShareData.DEFAULT_PORT);
 	}
 }

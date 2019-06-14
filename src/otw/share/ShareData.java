@@ -14,8 +14,8 @@ public class ShareData extends Object implements Serializable
 		OTHER
 	}
 	
-	private List<Object> shareDataList;
-	private List<ShareDataType> shareDataTypeList;
+	private List<Object> shareDataList = new ArrayList<>();
+	private List<ShareDataType> shareDataTypeList = new ArrayList<>();
 	private Object shareData;
 	private ShareDataType dataType;
 	public static ShareData setShareData(Object data, ShareDataType dataType)
