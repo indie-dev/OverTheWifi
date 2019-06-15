@@ -6,17 +6,66 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import android.content.Context;
 import otw.share.ShareData;
 import otw.share.ShareData.ShareDataType;
 import otw.share.client.Client;
+import otw.share.crossplatform.CrossPlatformBase;
 
-public class Server 
+public class Server extends CrossPlatformBase
 {
+
+	private Context context;
+	
+	public Server(Context context)
+	{
+		this.context = context;
+		//Code explains its self
+		this.setOnConnectedToServerListener(new OnConnectedToServerListener() {
+			
+			public void print(Object object)
+			{
+				System.out.println(object);
+			}
+			
+			@Override
+			public void onFail(Throwable throwable) {
+				// TODO Auto-generated method stub
+				//Print out the cause and the message of the failure
+				print(throwable.getCause());
+				print(throwable.getMessage());
+			}
+			
+			@Override
+			public void onDataSent(ShareData shareData) {
+				// TODO Auto-generated method stub
+				//Print out that the data was sent
+				print("Data sent!");
+			}
+			
+			@Override
+			public void onConnect(Socket socket) {
+				// TODO Auto-generated method stub
+				//Print out that a server was created
+				print("Server created!");
+			}
+		});
+	}
+	
+	public Context getContext()
+	{
+		return context;
+	}
 	
 	public Server()
 	{
 		//Code explains its self
 		this.setOnConnectedToServerListener(new OnConnectedToServerListener() {
+			
+			public void print(Object object)
+			{
+				System.out.println(object);
+			}
 			
 			@Override
 			public void onFail(Throwable throwable) {

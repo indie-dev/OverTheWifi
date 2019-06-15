@@ -1,8 +1,5 @@
 package otw.share.client;
 
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.InetAddress;
@@ -10,18 +7,65 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.content.Context;
+import otw.share.crossplatform.Clipboard;
+import otw.share.crossplatform.CrossPlatformBase;
 import otw.share.ShareData;
 import otw.share.ShareData.ShareDataType;
 
-public class Client 
+public class Client extends CrossPlatformBase
 {
 	//NOTICE: All methods that automate listening methods are EXPERIMENTAL.
 	//This is because the socket server keeps closing on every connection.
+
+	private Context context;
+	
+	public Client(Context context)
+	{
+		//Automatically create an on connect listener
+		this.setOnClientConnectedToServerListener(new OnClientConnectedToServerListener() {
+			public void print(Object object)
+			{
+				System.out.println(object);
+			}
+			@Override
+			public void onFail(Throwable throwable) {
+				// TODO Auto-generated method stub
+				//Log the cause of failure and message
+				print(throwable.getCause());
+				print(throwable.getMessage());
+			}
+			
+			@Override
+			public void onDataRecieved(ShareData shareData) {
+				// TODO Auto-generated method stub
+				//Log the data that was recieved
+				print(shareData.getShareData().toString());
+			}
+			
+			@Override
+			public void onConnect(Socket socket) {
+				// TODO Auto-generated method stub
+				//Notify that the client connected successfully to the server
+				print("Client successfully connected to server");
+			}
+		});
+		this.context = context;
+	}
+
+	public Context getContext()
+	{
+		return context;
+	}
+	
 	public Client()
 	{
 		//Automatically create an on connect listener
 		this.setOnClientConnectedToServerListener(new OnClientConnectedToServerListener() {
-			
+			public void print(Object object)
+			{
+				System.out.println(object);
+			}
 			@Override
 			public void onFail(Throwable throwable) {
 				// TODO Auto-generated method stub
@@ -135,7 +179,7 @@ public class Client
 	
 	public List<String> listAllConnectedHosts(int maxIP)
 	{
-		return this.listAllConnectedHosts(maxIP, 1000);
+		return this.listAllConnectedHosts(maxIP, 500);
 	}
 	
 	public List<String> listAllConnectedHosts()
@@ -174,7 +218,7 @@ public class Client
 	
 	public List<ShareData> listenOnAllConnectedDevices(int maxIP, int port)
 	{
-		return this.listenOnAllConnectedDevices(maxIP, 100, port);
+		return this.listenOnAllConnectedDevices(maxIP, 500, port);
 	}
 	
 	public List<ShareData> listenOnAllConnectedDevices(int port)
@@ -188,9 +232,10 @@ public class Client
 		{
 			//Copy the shared text
 			//Might not work on mobile
-			StringSelection selection = new StringSelection(data.getShareData().toString());
-			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-			clipboard.setContents(selection, null);
+			Clipboard clipboard = new Clipboard();
+			if(isAndroid())
+				clipboard = new Clipboard(getContext());
+			clipboard.copy(data);
 		}
 	}
 	
@@ -212,8 +257,12 @@ public class Client
 			}
 		}
 		
-		StringSelection selection = new StringSelection(textToCopy);
-		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-		clipboard.setContents(selection, null);
+		Clipboard clipboard = new Clipboard();
+		if(clipboard.isAndroid())
+		{
+			clipboard = new Clipboard(this.getContext());
+		}
 	}
+	
+	
 }

@@ -15,7 +15,17 @@ public class Host {
 	public static void main(String[] args) throws UnknownHostException, IOException 
 	{
 		Server server = new Server();
-		ShareData shareData = ShareData.setShareData("Test text", ShareDataType.CLIPBOARD_DATA);
-		server.sendData(shareData, ShareData.DEFAULT_PORT);
+		Runnable runnable = new Runnable()
+				{
+
+					@Override
+					public void run() {
+						// TODO Auto-generated method stub
+						ShareData shareData = ShareData.setShareData("Test text", ShareDataType.CLIPBOARD_DATA);
+						server.sendData(shareData, ShareData.DEFAULT_PORT);
+					}
+			
+				};
+		runnable.run();
 	}
 }

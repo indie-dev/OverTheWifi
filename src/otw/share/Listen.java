@@ -9,6 +9,22 @@ public class Listen
 	public static void main(String[] args)
 	{
 		Client client = new Client();
-		client.listenForAllDataTypes("localhost", ShareData.DEFAULT_PORT);
+		Runnable runnable = new Runnable()
+				{
+
+					@Override
+					public void run() 
+					{
+						// TODO Auto-generated method stub
+						for(String ip : client.listAllConnectedHosts(100))
+						{
+							System.out.println(ip);
+						}
+					}
+			
+				};
+				
+		runnable.run();
+		
 	}
 }
