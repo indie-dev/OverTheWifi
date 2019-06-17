@@ -1,266 +1,189 @@
 package otw.share.client;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.net.InetAddress;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 
 import android.content.Context;
-import otw.share.crossplatform.Clipboard;
-import otw.share.crossplatform.CrossPlatformBase;
-import otw.share.ShareData;
-import otw.share.ShareData.ShareDataType;
+import otw.share.SharedData;
+import otw.share.SharedData.SharedDataType;
+import otw.share.xplatform.Clipboard;
+import otw.share.xplatform.XPlatform;
 
-public class Client extends CrossPlatformBase
+public class Client extends XPlatform
 {
-	//NOTICE: All methods that automate listening methods are EXPERIMENTAL.
-	//This is because the socket server keeps closing on every connection.
-
-	private Context context;
-	
-	public Client(Context context)
+	private Context context; //Helps determine if app using sdk is on Android or not
+	private OnClientConnectedToServer onClientConnected; //For returning connection results
+	private int CONNECTION_PORT = SharedData.DEFAULT_PORT; //Which port to listen to
+	public Client(Context context, int connectionPort)
 	{
-		//Automatically create an on connect listener
-		this.setOnClientConnectedToServerListener(new OnClientConnectedToServerListener() {
-			public void print(Object object)
-			{
-				System.out.println(object);
-			}
-			@Override
-			public void onFail(Throwable throwable) {
-				// TODO Auto-generated method stub
-				//Log the cause of failure and message
-				print(throwable.getCause());
-				print(throwable.getMessage());
-			}
-			
-			@Override
-			public void onDataRecieved(ShareData shareData) {
-				// TODO Auto-generated method stub
-				//Log the data that was recieved
-				print(shareData.getShareData().toString());
-			}
-			
-			@Override
-			public void onConnect(Socket socket) {
-				// TODO Auto-generated method stub
-				//Notify that the client connected successfully to the server
-				print("Client successfully connected to server");
-			}
-		});
 		this.context = context;
-	}
+		this.CONNECTION_PORT = connectionPort;
+		this.setOnClientConnectedToServer(new OnClientConnectedToServer() {
+			
+			@Override
+			public void onDataRecieved(SharedData data) {
+				// TODO Auto-generated method stub
+				System.out.println(data.getSharedData().toString());
+			}
+			
+			@Override
+			public void onConnectionSuccess() {
+				// TODO Auto-generated method stub
+				System.out.println("Connected to host!");
+			}
+			
+			@Override
+			public void onConnectionFail(Throwable cause) {
+				// TODO Auto-generated method stub
+				System.out.println("Failed to connect to host: " + cause.getCause());
+				System.out.println("Message: " + cause.getMessage());
+			}
 
-	public Context getContext()
-	{
-		return context;
-	}
-	
-	public Client()
-	{
-		//Automatically create an on connect listener
-		this.setOnClientConnectedToServerListener(new OnClientConnectedToServerListener() {
-			public void print(Object object)
-			{
-				System.out.println(object);
-			}
 			@Override
-			public void onFail(Throwable throwable) {
+			public void onFailedToRetrieveData(Throwable cause) {
 				// TODO Auto-generated method stub
-				//Log the cause of failure and message
-				print(throwable.getCause());
-				print(throwable.getMessage());
-			}
-			
-			@Override
-			public void onDataRecieved(ShareData shareData) {
-				// TODO Auto-generated method stub
-				//Log the data that was recieved
-				print(shareData.getShareData().toString());
-			}
-			
-			@Override
-			public void onConnect(Socket socket) {
-				// TODO Auto-generated method stub
-				//Notify that the client connected successfully to the server
-				print("Client successfully connected to server");
+				System.out.println("Failed to retrieve SharedData: " + cause.getCause());
+				System.out.println("Message: " + cause.getMessage());
 			}
 		});
 	}
 	
-	private OnClientConnectedToServerListener onClientConnectedToServerListener;
-	private List<String> ipAddressesOnWifi = new ArrayList<>();
-	private List<ShareData> shareDataArray = new ArrayList<>();
-	public void setOnClientConnectedToServerListener(OnClientConnectedToServerListener onClientConnectedToServerListener)
+	public Client(int connectionPort)
 	{
-		this.onClientConnectedToServerListener = onClientConnectedToServerListener;
+		this.CONNECTION_PORT = connectionPort;
+		this.setOnClientConnectedToServer(new OnClientConnectedToServer() {
+			
+			@Override
+			public void onDataRecieved(SharedData data) {
+				// TODO Auto-generated method stub
+				System.out.println(data.getSharedData().toString());
+			}
+			
+			@Override
+			public void onConnectionSuccess() {
+				// TODO Auto-generated method stub
+				System.out.println("Connected to host!");
+			}
+			
+			@Override
+			public void onConnectionFail(Throwable cause) {
+				// TODO Auto-generated method stub
+				System.out.println("Failed to connect to host: " + cause.getCause());
+				System.out.println("Message: " + cause.getMessage());
+			}
+
+			@Override
+			public void onFailedToRetrieveData(Throwable cause) {
+				// TODO Auto-generated method stub
+				System.out.println("Failed to retrieve SharedData: " + cause.getCause());
+				System.out.println("Message: " + cause.getMessage());
+			}
+		});
 	}
 	
-	public ShareData listen(String host, int port)
+	public void setOnClientConnectedToServer(OnClientConnectedToServer onClientConnected)
+	{
+		this.onClientConnected = onClientConnected;
+	}
+	
+	protected Socket connectToServer(String hostName)
 	{
 		try
 		{
-			//Create a connection to the given host and port
-			Socket socket = new Socket(host, port);
-			//Check if the socket is not null
-			if(socket != null)
-			{
-				//Notify the sdk that there was a successful connection
-				this.onClientConnectedToServerListener.onConnect(socket);
-				//Rip the ShareData from the ObjectInputStream given from the socket
-				ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
-				//Tear out the object being sent
-				ShareData shareData = (ShareData) objectInputStream.readObject();
-				//Notify the sdk that the data was recieved
-				this.onClientConnectedToServerListener.onDataRecieved(shareData);
-				//Close the socket
-				socket.close();
-				//Return the shareData
-				return shareData;
-			}
-		}catch(IOException ioe)
+			//Connect the client to the server
+			Socket socket = new Socket(hostName, this.CONNECTION_PORT);
+			//Notify the sdk that the connection was successful
+			this.onClientConnected.onConnectionSuccess();
+			//Return the socket for later use
+			return socket;
+		}catch(IOException exception)
 		{
-			//Fucking hell, what went wrong? Well, the sdk will find out
-			this.onClientConnectedToServerListener.onFail(ioe);
-		} catch (ClassNotFoundException e) {
-			//Why i was forced to create this clause i will never know, ORACLE!
-			//Notify the sdk of this silly error
-			this.onClientConnectedToServerListener.onFail(e);
+			//Notify the sdk that the connection failed
+			this.onClientConnected.onConnectionFail(exception);
 		}
 		
-		//Return null, it explains itself... Come on, people!
+		//For the inevitable, return nothing
 		return null;
 	}
 	
-	public void listenForAllDataTypes(String host, int port)
-	{
-		this.listenAndCopy(host, port);
-		this.listenOnAllAndCopy(port);
-	}
 	
-	public void listenForAllDataTypes(int port)
+	protected ObjectInputStream getObjectFromServer(String hostName) 
 	{
-		//Experimental, for SDK-based automation
-		//Experimental because the socket server keeps on closing early
-		//Until that is patched, this will stay experimental
-		this.listenAndCopy("localhost", port);
-		this.listenOnAllAndCopy(port);
-	}
-	
-	public List<String> listAllConnectedHosts(String subnet, int maxIP, int timeout)
-	{
-		//Loop through maxIP
-		for( int i = 1; i < maxIP; i++)
+		try
 		{
-			//Set the host with the subnet
-			String host = subnet + "." + i;
-			try {
-				//Check if the ip address is reachable
-				if(InetAddress.getByName(host).isReachable(timeout))
-				{
-					//If it is, add the host to ipAddressesOnWifi
-					this.ipAddressesOnWifi.add(host);
-				}
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		//Return ipAddressesOnWifi
-		return this.ipAddressesOnWifi;
-	}
-	
-	public List<String> listAllConnectedHosts(int maxIP, int timeout)
-	{
-		return this.listAllConnectedHosts("192.168.0", maxIP, timeout);
-	}
-	
-	public List<String> listAllConnectedHosts(int maxIP)
-	{
-		return this.listAllConnectedHosts(maxIP, 500);
-	}
-	
-	public List<String> listAllConnectedHosts()
-	{
-		return this.listAllConnectedHosts(100);
-	}
-	
-	
-	public List<ShareData> listenOnAllConnectedDevices(String subnet, int maxIP, int timeout, int port)
-	{
-		//Loop through maxIP
-		for( int i = 1; i < maxIP; i++)
+			ObjectInputStream input = new ObjectInputStream(this.connectToServer(hostName).getInputStream());
+			//Return the input
+			return input;
+		}catch(IOException ioe)
 		{
-			//Set the host with the subnet
-			String host = subnet + "." + i;
-			try {
-				//Check if the ip address is reachable
-				if(InetAddress.getByName(host).isReachable(timeout))
-				{
-					ShareData data = listen(host, port);
-					shareDataArray.add(data);
-				}
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		//Return the share data array
-		return this.shareDataArray;
-	}
-	
-	public List<ShareData> listenOnAllConnectedDevices(int maxIP, int timeout, int port)
-	{
-		return this.listenOnAllConnectedDevices("192.168.0", maxIP, timeout, port);
-	}
-	
-	public List<ShareData> listenOnAllConnectedDevices(int maxIP, int port)
-	{
-		return this.listenOnAllConnectedDevices(maxIP, 500, port);
-	}
-	
-	public List<ShareData> listenOnAllConnectedDevices(int port)
-	{
-		return this.listenOnAllConnectedDevices(100, port);
-	}
-	
-	public void copySharedText(ShareData data)
-	{
-		if(data.getShareDataType().equals(ShareDataType.CLIPBOARD_DATA))
-		{
-			//Copy the shared text
-			//Might not work on mobile
-			Clipboard clipboard = new Clipboard();
-			if(isAndroid())
-				clipboard = new Clipboard(getContext());
-			clipboard.copy(data);
-		}
-	}
-	
-	public void listenAndCopy(String host, int port)
-	{
-		ShareData shareData = listen(host, port);
-		this.copySharedText(shareData);
-	}
-	
-	public void listenOnAllAndCopy(int port)
-	{
-		List<ShareData> shareDataList = this.listenOnAllConnectedDevices(port);
-		String textToCopy = new String();
-		for(ShareData data : shareDataList)
-		{
-			if(data.getShareDataType().equals(ShareDataType.CLIPBOARD_DATA))
-			{
-				textToCopy += data.getShareData().toString();
-			}
+			this.onClientConnected.onFailedToRetrieveData(ioe);
 		}
 		
-		Clipboard clipboard = new Clipboard();
-		if(clipboard.isAndroid())
+		//Return nothing if there was an error
+		return null;
+	}
+	
+	public SharedData getSharedData(String hostName)
+	{
+		try
 		{
-			clipboard = new Clipboard(this.getContext());
+			SharedData sharedData = (SharedData) this.getObjectFromServer(hostName).readObject();
+			//Return the retrieved SharedData
+			return sharedData;
+		}catch(IOException ioe)
+		{
+			this.onClientConnected.onFailedToRetrieveData(ioe);
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			this.onClientConnected.onFailedToRetrieveData(e);
+		}
+		
+		//Return nothing if there was an issue
+		return null;
+	}
+	
+	public void copyTextFromServer(String hostName)
+	{
+		//Get the hosted data
+		SharedData dataRetrieved = this.getSharedData(hostName);
+		//Check if the dataRetrieved's type is CLIPBOARD_DATA
+		if(dataRetrieved.getSharedDataType().equals(SharedDataType.CLIPBOARD_DATA))
+		{
+			//Copy the text using the crossplatform clipboard
+			Clipboard clipboard = new Clipboard(this.context);
+			//Copy the text
+			clipboard.copy(dataRetrieved);
+		}
+	}
+	
+	public void downloadFromServer(String hostName)
+	{
+		//GEt the hosted data
+		SharedData dataRetrieved = this.getSharedData(hostName);
+		//Check if the dataRetrieved's type is FILE
+		if(dataRetrieved.getSharedDataType().equals(SharedDataType.FILE))
+		{
+			String path = dataRetrieved.getMetaData(SharedData.METADATA_FILE_PATH).toString();
+			int fileLength =  Integer.parseInt(dataRetrieved.getMetaData(SharedData.METADATA_FILE_SIZE).toString());
+			byte[] content = (byte[]) dataRetrieved.getMetaData(SharedData.METADATA_FILE_CONTENT);
+			try {
+				BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(new File(path)));
+				outputStream.write(content);
+				outputStream.flush();
+				outputStream.close();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 		}
 	}
 	

@@ -1,31 +1,19 @@
 package otw.share;
 
-import java.io.IOException;
-import java.net.Socket;
-import java.net.UnknownHostException;
-
-import otw.share.ShareData.ShareDataType;
-import otw.share.client.Client;
-import otw.share.client.OnClientConnectedToServerListener;
-import otw.share.server.OnConnectedToServerListener;
+import otw.share.SharedData.SharedDataType;
 import otw.share.server.Server;
 
 public class Host {
 
-	public static void main(String[] args) throws UnknownHostException, IOException 
+	public static void main(String[] args) 
 	{
+		// TODO Auto-generated method stub
 		Server server = new Server();
-		Runnable runnable = new Runnable()
-				{
-
-					@Override
-					public void run() {
-						// TODO Auto-generated method stub
-						ShareData shareData = ShareData.setShareData("Test text", ShareDataType.CLIPBOARD_DATA);
-						server.sendData(shareData, ShareData.DEFAULT_PORT);
-					}
-			
-				};
-		runnable.run();
+		SharedData data = SharedData.setShareData("Hello".getBytes(), SharedDataType.FILE);
+		data.addMetaData(SharedData.METADATA_FILE_PATH, "test.jpg");
+		data.addMetaData(SharedData.METADATA_FILE_CONTENT, new SharedData.SharedDataFileReader("hbo.jpg").read());
+		data.addMetaData(SharedData.METADATA_FILE_SIZE, new SharedData.SharedDataFileReader("hbo.jpg").length());
+		server.hostData(data, "localhost");
 	}
+
 }

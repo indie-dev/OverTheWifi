@@ -2,177 +2,335 @@ package otw.share.server;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import android.content.Context;
-import otw.share.ShareData;
-import otw.share.ShareData.ShareDataType;
-import otw.share.client.Client;
-import otw.share.crossplatform.CrossPlatformBase;
+import otw.share.SharedData;
+import otw.share.xplatform.XPlatform;
 
-public class Server extends CrossPlatformBase
+public class Server extends XPlatform
 {
-
+	private Socket socket;
+	private ServerSocket serverSocket;
 	private Context context;
+	private int HOSTING_PORT = SharedData.DEFAULT_PORT;
+	private OnServerHostingSharedData onServerHosting;
+	
+	public Server()
+	{
+		setOnServerHostingSharedData(new OnServerHostingSharedData()
+				{
+
+					@Override
+					public void onServerSuccessfullyCreated() 
+					{
+						// TODO Auto-generated method stub
+						System.out.println("Successfully created the server!");
+					}
+
+					@Override
+					public void onFailedToCreateServer(Throwable cause) 
+					{
+						// TODO Auto-generated method stub
+						System.out.println("Failed to create the server: " + cause.getCause());
+						System.out.println("Message: " + cause.getMessage());
+					}
+
+					@Override
+					public void onHosted() 
+					{
+						// TODO Auto-generated method stub
+						System.out.println("Hosted the information successfully!");
+					}
+
+					@Override
+					public void onFailedToHostSharedData(Throwable cause) 
+					{
+						// TODO Auto-generated method stub
+						System.out.println("Failed to host: " + cause.getCause());
+						System.out.println("Message: " + cause.getMessage());
+					}
+
+					@Override
+					public void onShared() 
+					{
+						// TODO Auto-generated method stub
+						System.out.println("Successfully shared the information!");
+					}
+
+					@Override
+					public void onFailedToShare(Throwable throwable) 
+					{
+						// TODO Auto-generated method stub
+						System.out.println("Failed to share: " + throwable.getCause());
+						System.out.println("Message: " + throwable.getMessage());
+					}
+			
+				});
+	}
 	
 	public Server(Context context)
 	{
 		this.context = context;
-		//Code explains its self
-		this.setOnConnectedToServerListener(new OnConnectedToServerListener() {
-			
-			public void print(Object object)
+		setOnServerHostingSharedData(new OnServerHostingSharedData()
+		{
+
+			@Override
+			public void onServerSuccessfullyCreated() 
 			{
-				System.out.println(object);
-			}
-			
-			@Override
-			public void onFail(Throwable throwable) {
 				// TODO Auto-generated method stub
-				//Print out the cause and the message of the failure
-				print(throwable.getCause());
-				print(throwable.getMessage());
+				System.out.println("Successfully created the server!");
 			}
-			
+
 			@Override
-			public void onDataSent(ShareData shareData) {
+			public void onFailedToCreateServer(Throwable cause) 
+			{
 				// TODO Auto-generated method stub
-				//Print out that the data was sent
-				print("Data sent!");
+				System.out.println("Failed to create the server: " + cause.getCause());
+				System.out.println("Message: " + cause.getMessage());
 			}
-			
+
 			@Override
-			public void onConnect(Socket socket) {
+			public void onHosted() 
+			{
 				// TODO Auto-generated method stub
-				//Print out that a server was created
-				print("Server created!");
+				System.out.println("Hosted the information successfully!");
 			}
+
+			@Override
+			public void onFailedToHostSharedData(Throwable cause) 
+			{
+				// TODO Auto-generated method stub
+				System.out.println("Failed to host: " + cause.getCause());
+				System.out.println("Message: " + cause.getMessage());
+			}
+
+			@Override
+			public void onShared() 
+			{
+				// TODO Auto-generated method stub
+				System.out.println("Successfully shared the information!");
+			}
+
+			@Override
+			public void onFailedToShare(Throwable throwable) 
+			{
+				// TODO Auto-generated method stub
+				System.out.println("Failed to share: " + throwable.getCause());
+				System.out.println("Message: " + throwable.getMessage());
+			}
+	
 		});
 	}
 	
-	public Context getContext()
+	public Server(int hostingPort)
 	{
-		return context;
-	}
-	
-	public Server()
-	{
-		//Code explains its self
-		this.setOnConnectedToServerListener(new OnConnectedToServerListener() {
-			
-			public void print(Object object)
+		this.HOSTING_PORT = hostingPort;
+		setOnServerHostingSharedData(new OnServerHostingSharedData()
+		{
+
+			@Override
+			public void onServerSuccessfullyCreated() 
 			{
-				System.out.println(object);
-			}
-			
-			@Override
-			public void onFail(Throwable throwable) {
 				// TODO Auto-generated method stub
-				//Print out the cause and the message of the failure
-				print(throwable.getCause());
-				print(throwable.getMessage());
+				System.out.println("Successfully created the server!");
 			}
-			
+
 			@Override
-			public void onDataSent(ShareData shareData) {
+			public void onFailedToCreateServer(Throwable cause) 
+			{
 				// TODO Auto-generated method stub
-				//Print out that the data was sent
-				print("Data sent!");
+				System.out.println("Failed to create the server: " + cause.getCause());
+				System.out.println("Message: " + cause.getMessage());
 			}
-			
+
 			@Override
-			public void onConnect(Socket socket) {
+			public void onHosted() 
+			{
 				// TODO Auto-generated method stub
-				//Print out that a server was created
-				print("Server created!");
+				System.out.println("Hosted the information successfully!");
 			}
+
+			@Override
+			public void onFailedToHostSharedData(Throwable cause) 
+			{
+				// TODO Auto-generated method stub
+				System.out.println("Failed to host: " + cause.getCause());
+				System.out.println("Message: " + cause.getMessage());
+			}
+
+			@Override
+			public void onShared() 
+			{
+				// TODO Auto-generated method stub
+				System.out.println("Successfully shared the information!");
+			}
+
+			@Override
+			public void onFailedToShare(Throwable throwable) 
+			{
+				// TODO Auto-generated method stub
+				System.out.println("Failed to share: " + throwable.getCause());
+				System.out.println("Message: " + throwable.getMessage());
+			}
+	
 		});
 	}
 	
-	//OnConnectedToServerListener for client to server connection
-	private OnConnectedToServerListener onConnectedToServerListener;
-	//Just set that interface using setOnConnectedToServerListener
-	public void setOnConnectedToServerListener(OnConnectedToServerListener onConnectedToServerListener)
+	public Server(Context context, int hostingPort)
 	{
-		this.onConnectedToServerListener = onConnectedToServerListener;
+		this.context = context;
+		this.HOSTING_PORT = hostingPort;
+		setOnServerHostingSharedData(new OnServerHostingSharedData()
+		{
+
+			@Override
+			public void onServerSuccessfullyCreated() 
+			{
+				// TODO Auto-generated method stub
+				System.out.println("Successfully created the server!");
+			}
+
+			@Override
+			public void onFailedToCreateServer(Throwable cause) 
+			{
+				// TODO Auto-generated method stub
+				System.out.println("Failed to create the server: " + cause.getCause());
+				System.out.println("Message: " + cause.getMessage());
+			}
+
+			@Override
+			public void onHosted() 
+			{
+				// TODO Auto-generated method stub
+				System.out.println("Hosted the information successfully!");
+			}
+
+			@Override
+			public void onFailedToHostSharedData(Throwable cause) 
+			{
+				// TODO Auto-generated method stub
+				System.out.println("Failed to host: " + cause.getCause());
+				System.out.println("Message: " + cause.getMessage());
+			}
+
+			@Override
+			public void onShared() 
+			{
+				// TODO Auto-generated method stub
+				System.out.println("Successfully shared the information!");
+			}
+
+			@Override
+			public void onFailedToShare(Throwable throwable) 
+			{
+				// TODO Auto-generated method stub
+				System.out.println("Failed to share: " + throwable.getCause());
+				System.out.println("Message: " + throwable.getMessage());
+			}
+	
+		});
 	}
 	
-	//Send the data by hosting it
-	public void sendData(ShareData shareData, int port)
+	public void setOnServerHostingSharedData(OnServerHostingSharedData onServerHosting)
 	{
-		try
-		{
-			//Use ServerSocket to create a temporary server
-			ServerSocket serverSocket = new ServerSocket(port);
-			//Accept all connections to this server
-			Socket socket = serverSocket.accept();
-			if(socket != null)
-			{
-				//Notify the sdk that the server was created
-				this.onConnectedToServerListener.onConnect(socket);
-				//Output the ShareData class to the client connected
-				ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-				objectOutputStream.writeObject(shareData);
-				objectOutputStream.flush();
-				objectOutputStream.close();
-				//Notify the sdk that the data was sent successfully
-				this.onConnectedToServerListener.onDataSent(shareData);
-				//Close the server socket
-				serverSocket.close();
-				//Close the socket
-				socket.close();
-			}else
-			{
-				//Notify the sdk that server creation was a bust
-				this.onConnectedToServerListener.onFail(new Throwable("Null socket"));
-			}
-			
-		}catch(IOException ioe)
-		{
-			//ioe.printStackTrace();
-			//Notify the sdk of a critical error
-			this.onConnectedToServerListener.onFail(ioe);
+		this.onServerHosting = onServerHosting;
+	}
+	
+	protected ServerSocket createSocketServer(String hostName) throws NullPointerException
+	{
+		try {
+			//Create the server via ServerSocket class, using HOSTING_PORT
+			serverSocket = new ServerSocket(this.HOSTING_PORT);
+			//Notify the sdk that the server was created successfully
+			this.onServerHosting.onServerSuccessfullyCreated();
+			//Return the serverSocket
+			return serverSocket;
+		} catch (IOException e) {
+			//Notify the sdk that there was an error during the creation of the server
+			this.onServerHosting.onFailedToCreateServer(e);
 		}
+		
+		//Return nothing as there was an error
+		return null;
 	}
 	
-	public void sendDataAsHTML(ShareData shareData, int port)
+	protected Socket createSocketConnection(String hostName) throws NullPointerException
 	{
-		//This is for browser-based testing, do not actually use this
-		try
+		try {
+			//Create a socket connection by accepting the connection
+			socket = this.createSocketServer(hostName).accept();
+			//Notify that the socket connection was successful
+			this.onServerHosting.onHosted();
+			//Return the socket
+			return socket;
+		} catch (IOException e) 
 		{
-			//Create a ServerSocket using the given port
-			ServerSocket serverSocket = new ServerSocket(port);
-			//Accept the incoming connection
-			Socket socket = serverSocket.accept();
-			//Check if the socket was not null
-			if(socket != null)
-			{
-				//Since the socket is not null, notify the sdk of a creation success
-				this.onConnectedToServerListener.onConnect(socket);
-				//Print out the html to the server
-				PrintWriter writer = new PrintWriter(socket.getOutputStream());
-				//Send an html response
-				writer.println("HTTP/1.1 200 OK");
-				writer.println("Content-Type: text/html");
-				writer.println("\r\n");
-				//Print out the ShareData
-				writer.write(shareData.getShareData().toString());
-				writer.flush();
-				writer.close();
-				//Notify the sdk that the data was sent
-				this.onConnectedToServerListener.onDataSent(shareData);
-				socket.close();
-			}else
-			{
-				//Uh-oh! What went wrong? The sdk will find out
-				this.onConnectedToServerListener.onFail(new Throwable("Null socket"));
-			}
-		}catch(IOException ioe)
+			//Notify the sdk of the error we arrived at during Socket creation
+			this.onServerHosting.onFailedToHostSharedData(e);
+		}
+		
+		//Return null due to any error
+		return null;
+	}
+	
+	protected ObjectOutputStream getStreamWriter(String hostName) throws NullPointerException
+	{
+		try 
 		{
-			//Notify the sdk of a critical error X(
-			this.onConnectedToServerListener.onFail(ioe);
+			//Return the ObjectOutputStream instance
+			return new ObjectOutputStream(this.createSocketConnection(hostName).getOutputStream());
+		} catch (IOException e)
+		{
+			//Print out the error
+			e.printStackTrace();
+		}
+		
+		//Return nothing due to an error
+		return null;
+	}
+	
+	protected Socket getSocket()
+	{
+		return socket;
+	}
+	
+	protected ServerSocket getServerSocket()
+	{
+		return serverSocket;
+	}
+	
+	public OnServerHostingSharedData getOnServerHostingSharedData()
+	{
+		return this.onServerHosting;
+	}
+	
+	public void hostData(SharedData sharedData, String hostName)
+	{
+		try {
+			//Create the writer
+			ObjectOutputStream streamWriter = this.getStreamWriter(hostName);
+			//Write it all out
+			streamWriter.writeObject(sharedData);
+			//Flush the writer
+			streamWriter.flush();
+			//Close the writer
+			streamWriter.close();
+			
+			//Close the socket
+			getSocket().close();
+			//End the server
+			getServerSocket().close();
+		} catch (IOException | NullPointerException e) 
+		{
+			//Notify of the error
+			this.onServerHosting.onFailedToHostSharedData(e);
 		}
 	}
 }
