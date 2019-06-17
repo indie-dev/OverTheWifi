@@ -43,6 +43,7 @@ v 0.0.2:
 How can I share a file?
 
 Server:
+
 	```
 	
 	Server server = new Server();
@@ -54,6 +55,7 @@ Server:
 	```
 
 Client:
+
 	```
 	
 	Client client = new Client(SharedData.DEFAULT_PORT);
